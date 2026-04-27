@@ -140,7 +140,15 @@ jobs:
           git push origin "$TAG"
 
       - name: Publish
-        run: npm publish
+        run: |
+          VERSION="${{ steps.pkg.outputs.version }}"
+          if [[ "$VERSION" == *-* ]]; then
+            echo "Publishing prerelease $VERSION with dist-tag 'next'"
+            npm publish --tag next
+          else
+            echo "Publishing release $VERSION with dist-tag 'latest'"
+            npm publish
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
