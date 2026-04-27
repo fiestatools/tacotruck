@@ -5,31 +5,124 @@ permissions:
   contents: write
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: Version bump type
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prepatch
+          - preminor
+          - premajor
+          - prerelease
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 jobs:
-  release:
+  open-release-pr:
+    if: github.event_name == 'workflow_dispatch'
+    name: Open release PR
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
-      - name: Set node
-        uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          node-version: 20
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        id: bump
+        run: |
+          npx bumpp --release ${{ inputs.release-type }} --yes --no-tag --no-push --commit "chore: release v%s"
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Open release PR
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7.0.9
+        with:
+          branch: release/v${{ steps.bump.outputs.version }}
+          base: main
+          title: 'chore: release v${{ steps.bump.outputs.version }}'
+          body: |
+            Automated release PR for **v${{ steps.bump.outputs.version }}**.
+
+            Merging this PR will tag `v${{ steps.bump.outputs.version }}`,
+            publish to GitHub Packages, and create a GitHub Release.
+          labels: release
+          delete-branch: true
+
+  release:
+    if: >
+      github.event_name == 'pull_request'
+      && github.event.pull_request.merged == true
+      && startsWith(github.event.pull_request.head.ref, 'release/v')
+    name: Tag and publish
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+    env:
+      GITHUB_NPM_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '24'
+          cache: npm
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      - run: npm ci
+      - name: Read package version
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
-      - name: Build
+      - name: Verify tag does not exist
+        run: |
+          TAG="v${{ steps.pkg.outputs.version }}"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag $TAG already exists. Aborting."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Replace credentials
+        run: sed -i -e 's/GITHUB_NPM_TOKEN/NODE_AUTH_TOKEN/g' .npmrc
+
+      - name: Run build
         run: npm run build
 
       - name: Build binaries
@@ -38,11 +131,18 @@ jobs:
       - name: Make binaries executable
         run: chmod +x bundles/tacotruck-*
 
-      - name: publish
-        if: false
-        run: npm publish --access public
+      - name: Create and push tag
+        run: |
+          TAG="v${{ steps.pkg.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Publish
+        run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create release
         run: npx changelogithub --assets "bundles/tacotruck-*"
@@ -51,14 +151,14 @@ jobs:
 
       - name: Trigger Homebrew formula update
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION="${{ steps.pkg.outputs.version }}"
           echo "Triggering Homebrew formula update for version: $VERSION"
 
           gh workflow run update-formula.yml \
-            --repo testfiesta/homebrew-tacotruck \
+            --repo fiestatools/homebrew-tacotruck \
             --field version="$VERSION" \
             --field auto_merge=true
 
-          echo "✅ Successfully triggered Homebrew formula update workflow"
+          echo "Successfully triggered Homebrew formula update workflow"
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_UPDATE_TOKEN }}

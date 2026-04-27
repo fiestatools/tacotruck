@@ -166,7 +166,7 @@ git push origin feature/your-feature-name
 
 ### 3. Create a Pull Request
 
-1. Go to the [TacoTruck repository](https://github.com/testfiesta/tacotruck)
+1. Go to the [TacoTruck repository](https://github.com/fiestatools/tacotruck)
 2. Click "New Pull Request"
 3. Select your fork and branch
 4. Fill out the PR template with:
@@ -203,7 +203,7 @@ tacotruck/
 
 If you need assistance:
 
-1. Check the [existing issues](https://github.com/testfiesta/tacotruck/issues)
+1. Check the [existing issues](https://github.com/fiestatools/tacotruck/issues)
 2. Review the [TestFiesta documentation](https://docs.testfiesta.com)
 3. Create a new issue with the "question" label
 4. Join our community discussions
