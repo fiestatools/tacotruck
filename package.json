@@ -1,5 +1,5 @@
 {
-  "name": "@testfiesta/tacotruck",
+  "name": "@fiestatools/tacotruck",
   "type": "module",
   "version": "1.0.0-beta.34",
   "description": "Test/QA data pipeline by TestFiesta",
@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/testfiesta/tacotruck.git"
+    "url": "git+https://github.com/fiestatools/tacotruck.git"
   },
   "exports": {
     ".": {

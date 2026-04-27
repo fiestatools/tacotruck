@@ -1,7 +1,7 @@
 # TacoTruck
 
-[![ci](https://github.com/testfiesta/tacotruck/actions/workflows/ci.yml/badge.svg)](https://github.com/testfiesta/tacotruck/actions/workflows/ci.yml)
-![NPM Version](https://img.shields.io/npm/v/%40testfiesta%2Ftacotruck)
+[![ci](https://github.com/fiestatools/tacotruck/actions/workflows/ci.yml/badge.svg)](https://github.com/fiestatools/tacotruck/actions/workflows/ci.yml)
+![NPM Version](https://img.shields.io/npm/v/%40fiestatools%2Ftacotruck)
 
 Tacotruck exists to make it easy to move quality data to wherever you need it. Whether you are looking to report test results to your various quality systems or trying to migrate historical data between test case management tools, tacotruck provides a simple, easily extendable interface for doing so.
 
@@ -31,30 +31,30 @@ curl -fsSL https://testfiesta.com/install-tacotruck-cli.sh | bash
 ##### Homebrew
 
 ```bash
-brew tap testfiesta/tacotruck
+brew tap fiestatools/tacotruck
 brew install tacotruck
 ```
 
 #### Run instantly using npx
 
 ```bash
-npx @testfiesta/tacotruck
+npx @fiestatools/tacotruck
 ```
 
 #### Install globally using npm
 
 ```bash
-npm install -g @testfiesta/tacotruck
+npm install -g @fiestatools/tacotruck
 ```
 
 ### Usage as a library
 
 ```bash
-npm install @testfiesta/tacotruck
+npm install @fiestatools/tacotruck
 ```
 
 ```typescript
-import { TestFiestaClient, TestRailClient } from 'tacotruck'
+import { TestFiestaClient, TestRailClient } from '@fiestatools/tacotruck'
 
 const tfClient = new TestFiestaClient({
   apiKey: '<YOUR_TF_API_KEY>',
@@ -70,11 +70,11 @@ const trClient = new TestRailClient({
 
 ### Example usage with various testing frameworks
 
-Check out [tacotruck-examples](https://github.com/testfiesta/tacotruck-examples) for examples of using `tacotruck` with your favorite language and framework.
+Check out [tacotruck-examples](https://github.com/fiestatools/tacotruck-examples) for examples of using `tacotruck` with your favorite language and framework.
 
 ## <a name="documentation">📖 Documentation</a>
 
-We highly recommend you take a look at the [Testfiesta docs](https://docs.testfieta.com) for more information.
+We highly recommend you take a look at the [Testfiesta docs](https://docs.testfiesta.com) for more information.
 
 For CLI-specific documentation, check out the [TacoTruck CLI Getting Started Guide](https://docs.testfiesta.com/automation/tacotruck-cli/get-start).
 
